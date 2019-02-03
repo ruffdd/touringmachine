@@ -30,6 +30,7 @@ private:
     char empthy;
     std::unordered_set<std::string> E = std::unordered_set<std::string>();
 public:
+    TM(std::string path);
     /**
      * @brief Creates a touringmachine
      * @param  Z: the set of States

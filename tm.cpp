@@ -4,6 +4,9 @@
 #include <string>
 #include <unordered_set>
 #include <sstream>
+#include <fstream>
+#include <iostream>
+#include <regex>
 
 TM::TM(std::unordered_set<std::string> Z,
     std::unordered_set<char> Sigma,
@@ -50,6 +53,33 @@ TM::TM(std::unordered_set<std::string> Z,
     this->E = std::unordered_set<std::string>(E);
 }
 
+TM::TM(std::string path){
+    std::regex delta_regex = std::regex("^(\\S+)[\\t ]+(\\S+)[\\t ]+>[\\t ]+(\\S+)[\\t ]+(\\S+)[\\t ]+(R|L|N)$");
+    std::ifstream tm_file;
+    try
+    {
+        tm_file.open(path);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    std::string line;
+    while(getline(tm_file,line)){
+        if(std::regex_match(line,delta_regex)){
+            auto iter = std::sregex_token_iterator(line.begin(),line.end(),delta_regex,0);
+            std::sregex_token_iterator end;
+            while(iter!=end){
+                std::cout << iter->str() << std::endl;
+                iter++;
+            }
+            
+        }
+    }
+
+    tm_file.close();
+}
+
 TM::~TM(){
 
 }
@@ -63,7 +93,7 @@ std::string TM::run(std::string input,std::ostream &out){
     iterator++;
     std::string state = start;
     while(E.count(state)== 0){
-        out << input;
+        out << input << "\n";
         for(auto instr_iter = delta.begin();;instr_iter++){
             instruction instr = *instr_iter;
             if(instr.z == state && instr.g == *iterator){
@@ -94,6 +124,6 @@ std::string TM::run(std::string input,std::ostream &out){
 }
 
 TM::operator std::__cxx11::string(){
-    return "M=";
+    return "";
 }
 
