@@ -1,4 +1,5 @@
 .vscode/
 
 //executable
-touring
+bin/
+out/
