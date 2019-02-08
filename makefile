@@ -19,7 +19,7 @@ out:
 bin/touring: out/main.o out/tm.o 
 	$(CC) $^ -o $@ $(LIBS)
 
-out/tm.o: tm.cpp tm.h
+out/tm.o: tm.cpp tm.h helper.h
 	$(CC) -c tm.cpp -o $@ $(CFLAGS)
 
 out/main.o: main.cpp tm.h

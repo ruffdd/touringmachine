@@ -7,16 +7,19 @@
 #include <fstream>
 #include <iostream>
 #include <regex>
+#include <exception>
+#include <system_error>
+#include "helper.h"
 
 TM::TM(std::unordered_set<std::string> Z,
     std::unordered_set<char> Sigma,
     std::unordered_set<char> Gamma,
     std::vector<instruction> delta,
     std::string start,
-    char empthy,
-    std::unordered_set<std::string> E){
+    char empty,
+   std::unordered_set<std::string> E){
         if(Z.empty()){
-            throw "Z needs to be not empthy";
+            throw "Z needs to be not empty";
         }
         // {
         //     std::unordered_set<char> output;
@@ -49,32 +52,63 @@ TM::TM(std::unordered_set<std::string> Z,
     this->Gamma = std::unordered_set<char>(Gamma);
     this->delta = std::vector<instruction>(delta);
     this->start = start;
-    this->empthy = empthy;
+    this->empty = empty;
     this->E = std::unordered_set<std::string>(E);
 }
 
 TM::TM(std::string path){
-    std::regex delta_regex = std::regex("^(\\S+)[\\t ]+(\\S+)[\\t ]+>[\\t ]+(\\S+)[\\t ]+(\\S+)[\\t ]+(R|L|N)$");
+    std::regex delta_regex = std::regex("^(\\S+)[\\t ]+(\\S+)[\\t ]+(\\S+)[\\t ]+(\\S+)[\\t ]+(R|L|N)$");
     std::ifstream tm_file;
-    try
-    {
-        tm_file.open(path);
+    tm_file.open(path);
+    if(!tm_file){
+        throw std::system_error::runtime_error("File ("+path+") empty or not existing");
     }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
+
+
     std::string line;
     while(getline(tm_file,line)){
-        if(std::regex_match(line,delta_regex)){
-            auto iter = std::sregex_token_iterator(line.begin(),line.end(),delta_regex,0);
-            std::sregex_token_iterator end;
-            while(iter!=end){
-                std::cout << iter->str() << std::endl;
-                iter++;
+        line = helper::trim(line);
+        if (helper::startwith(line, "start:")) {
+            start = line.substr(line.find(":")+1);
+        }else if (helper::startwith(line,"empty"))
+        {
+            empty = line[line.find(":")+1];
+        }else if (helper::startwith(line,"end:"))
+        {
+            std::vector<std::string> ends = helper::split(line.substr(line.find(":")+1),{","});
+            for(auto&& e : ends)
+            {
+                E.insert(e);
             }
             
+        }else if(std::regex_match(line,delta_regex))
+        {
+            instruction new_instruction;
+            std::vector<std::string> values=helper::split(line," \t");
+            new_instruction.z = values[0];
+            new_instruction.g = values[1][0];
+            new_instruction.z_ = values[2];
+            new_instruction.g_ = values[3][0];
+            if(values[4][0]=='R'){
+                new_instruction.next = R;
+            }else if (values[4][0]=='L')
+            {
+                new_instruction.next = L;
+            }else if (values[4][0]=='N')
+            {
+                new_instruction.next = N;
+            }else{
+                throw "Only Next Values LRN are allowed. not " + values[4];
+            }
+            Z.insert(new_instruction.z);
+            Z.insert(new_instruction.z_);
+            Sigma.insert(new_instruction.g);
+            Sigma.insert(new_instruction.g_);
+            delta.push_back(new_instruction);
         }
+        Gamma = std::unordered_set<char>(Sigma);
+        Gamma.insert(empty);
+        
     }
 
     tm_file.close();
@@ -88,7 +122,7 @@ std::string TM::run(std::string input){
     return run(input,nullstream);
 }
 std::string TM::run(std::string input,std::ostream &out){
-    input= empthy + input +empthy;
+    input= empty + input +empty;
     auto iterator = input.begin();
     iterator++;
     std::string state = start;
@@ -102,7 +136,7 @@ std::string TM::run(std::string input,std::ostream &out){
                 if(instr.next == R){
                     iterator++;
                     if(iterator == input.end()){
-                        input.insert(input.end(),empthy);
+                        input.insert(input.end(),empty);
                         iterator = input.end();
                         iterator--;
                     }
@@ -110,7 +144,7 @@ std::string TM::run(std::string input,std::ostream &out){
                 {
                     iterator--;
                     if(iterator == input.begin()){
-                        input.insert(input.begin(),empthy);
+                        input.insert(input.begin(),empty);
                         iterator = input.begin();
                         iterator++;
                     }

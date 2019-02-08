@@ -5,6 +5,9 @@ enum next_state{
 };
 
 struct instruction{
+    instruction(){
+        
+    }
     instruction(std::string z,char g,std::string z_,char g_,next_state next){
         this->z = z;
         this->g = g;
@@ -27,7 +30,7 @@ private:
     std::unordered_set<char> Gamma = std::unordered_set<char>();
     std::vector<instruction> delta = std::vector<instruction>();
     std::string start;
-    char empthy;
+    char empty;
     std::unordered_set<std::string> E = std::unordered_set<std::string>();
 public:
     TM(std::string path);
@@ -37,7 +40,7 @@ public:
      * @param  Sigma: the input alphabet
      * @param  Gamma: the tape alphabet
      * @param  start: the start state
-     * @param  empthy: the emphty symbol
+     * @param  empty: the empty symbol
      * @param  E: the set of end states
      * @retval 
      */
@@ -46,7 +49,7 @@ public:
     std::unordered_set<char> Gamma,
     std::vector<instruction> delta,
     std::string start,
-    char empthy,
+    char empty,
     std::unordered_set<std::string> E);
     ~TM();
     std::string run(std::string input);
